@@ -2,11 +2,11 @@
 
 ## Description
 
-Field-striped encoding similar in spirit to that of [Google Dremel](http://research.google.com/pubs/pub36632.html).
-As is common in many publications, the "what" and "why" are omitted for lack of
-time and space. We wanted to understand the requirements, assumptions, trade-offs, 
-etc. used in field-striping and compare that with the results / implementation 
-presented in the Dremel paper. 
+Field-stripe encoding similar in spirit to that of [Google Dremel](http://research.google.com/pubs/pub36632.html).
+As is common in many publications, the "what" and "why" were omitted for lack of
+time and space from the Dremel paper. We wanted to understand the requirements, 
+assumptions, trade-offs, etc. necessary for creating a field-stripe based encoding
+and compare that with the results / implementation presented in the Dremel paper. 
 
 The primary artifact is the document [Efficient Field-Striped, Nested, Disk-backed Record Storage](Field-Striped_Nested_Storage.pdf).
 The document is by no means complete and is in desperate need of a re-write but
