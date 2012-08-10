@@ -2,7 +2,7 @@
 
 ## Description
 
-Field-stripe encoding similar in spirit to that of [Google Dremel](http://research.google.com/pubs/pub36632.html).
+Field-stripe encoding similar in spirit to that of Google's [Dremel](http://research.google.com/pubs/pub36632.html).
 As is common in many publications, the "what" and "why" were omitted for lack of
 time and space from the Dremel paper. We wanted to understand the requirements, 
 assumptions, trade-offs, etc. necessary for creating a field-stripe based encoding
