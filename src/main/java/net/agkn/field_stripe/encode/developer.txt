@@ -1,0 +1,25 @@
+Check
+=====
+
+*  Should the IFieldStripEncoder's methods be "encode" rather than "write" for
+   consistency / sanity?
+
+*  Should the roles of encoder and reader in RootFieldStripeEncoder be reversed?
+   RootFieldStripeDecoder feels better (and see the intent in the class JavaDoc).
+   (Fix the missing "final")
+
+To do
+=====
+
+*  Figure out who owns the writers.
+   -  To move to a fixed-size output, how might the writers get cycled? It 
+      seems that this would require coordination between all of the writers so
+      that the same records are written in each (otherwise there will be a 
+      problem in that reconstructing a record might required multiple blocks).
+   -  If the writers are dropped and recreated (for each block) then something
+      needs to have enough information to recreate them. As it stands, the
+      assumption is that the writers will know about the fields that they are
+      writing (to allow for optimizations around the size of the meta-data to
+      be written).
+
+      

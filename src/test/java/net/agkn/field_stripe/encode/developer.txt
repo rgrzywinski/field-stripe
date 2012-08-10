@@ -1,0 +1,11 @@
+Field-stripe encoders tests are broken into two primary cases:
+
+*  Repeated parents: at least one of the parents of a field is repeated
+   and as a result "repeated-parent" markers are required. 
+*  Non-repeated parents: none of the parents of a field is repeated. In this
+   case, each value (except where preceded by a "repeated-value" marker) implies 
+   a new record.
+
+This separation was done solely to reduce the complexity of the test cases. 
+Refer to the "Efficient Field-Striped, Nested Disk-backed Record Storage" document
+for encoding information.

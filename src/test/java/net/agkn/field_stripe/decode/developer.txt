@@ -1,0 +1,2 @@
+Field-stripe decoders tests are broken down in the same manner as the encoder
+tests. Refer to that developer.txt for more information.

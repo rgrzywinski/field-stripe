@@ -1,0 +1,19 @@
+Background
+==========
+
+The readers and writers of the raw field stripe states and values. This package 
+should be considered to be a service-provider interface (SPI). It contains the 
+various field stripe file encodings. The process of deriving and decoding the
+states from and into records is completely divorced from the writing of those
+states. New file encodings can be created without the need to understand or
+change how the striping process works.
+
+For each file encoding a IFieldStripeWriterFactory and IFieldStripeReaderFactory 
+are required.
+
+
+To do
+=====
+
+*  Add meta-data to each field stripe so that validation can be performed in
+   the readers between what exists and what is expected.

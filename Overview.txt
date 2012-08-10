@@ -1,0 +1,35 @@
+Background
+==========
+
+The primary actors in field stripe encoding are the following:
+
+*  Records: the input data that is to be encoded. Records are read via an
+   IRecordReader.
+*  Schema: the definition of the structure of the records. This is embodied as
+   ICompositeType (and its children IField and IFieldType).
+*  Field-stripes: the output field-striped data. Stripes are written via an
+   IFieldStripeWriter (one per each leaf field in the schema).
+*  Encoder: a translator between the input records and the output field-stripes.
+   A tree of encoders are created to exactly match the schema. They read the 
+   records (using an IRecordReader), translate (encode) the information into
+   states and propagate that state to the leaf fields and out to the field-
+   stripes (using the IFieldStripeWriters).
+
+(TODO: decoding)
+
+Records
+-------
+
+Records are represented in a streaming format (SAX-like) rather than in a more
+traditional object-centric (DOM-like) manner. This allows for a record to be
+larger than the available RAM though any single field's value must fit within 
+RAM.
+
+Records can contain be made of primitive values, repeated values ("array fields") 
+and composites or structures.
+
+The decision was made to *not* use auto-boxing. (As long as a reference to the 
+boxed primitive isn't maintained past eden, performance of auto-boxing is 
+rarely a concern in modern JVMs.) The decision was based on code that already
+existed for records, schemas, etc. If the maintenance of the code becomes
+unwieldy this decision can be revisited.
