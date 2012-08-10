@@ -8,7 +8,7 @@ time and space from the Dremel paper. We wanted to understand the requirements,
 assumptions, trade-offs, etc. necessary for creating a field-stripe based encoding
 and compare that with the results / implementation presented in the Dremel paper. 
 
-The primary artifact is the document [Efficient Field-Striped, Nested, Disk-backed Record Storage](Field-Striped_Nested_Storage.pdf).
+The primary artifact is the document [Efficient Field-Striped, Nested, Disk-backed Record Storage](blob/master/Field-Striped_Nested_Storage.pdf).
 The document is by no means complete and is in desperate need of a re-write but
 it is packed with information. In order to give the document some teeth and to
 understand the implications of what it proposes, a simple Java-based implementation
