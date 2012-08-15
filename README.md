@@ -17,9 +17,8 @@ was crafted.
 ## Notes
 
 As it stands, the software *does not compile* as it references internal dependencies.
-These are primarily from two sources: AK's internal Protobuf parser and our
-common libs which covers exceptions. The latter should be simple to adapt. The
-former will take a bit of work to adapt to another parser such as [Protostuff](http://code.google.com/p/protostuff/).
+This is primarily due to the use of AK's internal Protobuf parser. It will take
+a bit of work to adapt to another parser such as [Protostuff](http://code.google.com/p/protostuff/).
 Until the above work can be performed use the code as a guide for understanding
 how an implementation might look and function. We apologize for any difficulty
 that this causes.
