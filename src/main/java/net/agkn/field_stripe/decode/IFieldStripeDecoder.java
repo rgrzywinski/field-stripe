@@ -16,7 +16,7 @@ package net.agkn.field_stripe.decode;
  * limitations under the License. 
  */
 
-import net.agkn.common.exception.OperationFailedException;
+import net.agkn.field_stripe.exception.OperationFailedException;
 import net.agkn.field_stripe.record.FieldQualifier;
 import net.agkn.field_stripe.record.writer.IRecordWriter;
 

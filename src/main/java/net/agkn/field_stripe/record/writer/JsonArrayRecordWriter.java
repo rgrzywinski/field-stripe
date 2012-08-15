@@ -21,8 +21,8 @@ import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.Stack;
 
-import net.agkn.common.exception.InvalidDataException;
-import net.agkn.common.exception.OperationFailedException;
+import net.agkn.field_stripe.exception.InvalidDataException;
+import net.agkn.field_stripe.exception.OperationFailedException;
 import net.agkn.field_stripe.record.IField;
 import net.jcip.annotations.NotThreadSafe;
 import net.minidev.json.JSONStyle;

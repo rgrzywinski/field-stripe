@@ -16,7 +16,7 @@ package net.agkn.field_stripe.record.protobuf;
  * limitations under the License. 
  */
 
-import net.agkn.common.exception.DeveloperException;
+import net.agkn.field_stripe.exception.DeveloperException;
 import net.agkn.field_stripe.record.FieldQualifier;
 import net.agkn.field_stripe.record.IField;
 import net.agkn.field_stripe.record.IFieldType;

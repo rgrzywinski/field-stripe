@@ -16,16 +16,16 @@ package net.agkn.field_stripe.encode;
  * limitations under the License. 
  */
 
-import org.apache.commons.lang.mutable.MutableBoolean;
-
-import net.agkn.common.exception.DeveloperException;
-import net.agkn.common.exception.OperationFailedException;
+import net.agkn.field_stripe.exception.DeveloperException;
+import net.agkn.field_stripe.exception.OperationFailedException;
 import net.agkn.field_stripe.record.IField;
 import net.agkn.field_stripe.record.IFieldType;
 import net.agkn.field_stripe.record.PrimitiveType;
 import net.agkn.field_stripe.record.reader.IRecordReader;
 import net.agkn.field_stripe.stripe.IFieldStripeWriter;
 import net.jcip.annotations.NotThreadSafe;
+
+import org.apache.commons.lang.mutable.MutableBoolean;
 
 /**
  * A field-stripe encoder for a leaf field -- a field whose {@link IField#getType() type}

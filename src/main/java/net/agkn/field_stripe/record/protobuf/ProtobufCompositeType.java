@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import net.agkn.common.exception.DeveloperException;
+import net.agkn.field_stripe.exception.DeveloperException;
 import net.agkn.field_stripe.record.ICompositeType;
 import net.agkn.field_stripe.record.IField;
 import net.agkn.field_stripe.record.IFieldType;

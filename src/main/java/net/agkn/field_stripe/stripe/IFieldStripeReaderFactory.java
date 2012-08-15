@@ -16,7 +16,7 @@ package net.agkn.field_stripe.stripe;
  * limitations under the License. 
  */
 
-import net.agkn.common.exception.OperationFailedException;
+import net.agkn.field_stripe.exception.OperationFailedException;
 import net.agkn.field_stripe.record.IField;
 import net.agkn.field_stripe.record.PrimitiveType;
 
@@ -34,7 +34,7 @@ public interface IFieldStripeReaderFactory {
      *         never be <code>null</code>. Each field in a tree is guaranteed
      *         to be unique.
      * @return this will never be <code>null</code>
-     * @throws OperationFailedException if the writer could not be created for
+     * @throws OperationFailedException if the reader could not be created for
      *         any reason (e.g. underlying resources could not be allocated or
      *         the field is not known to this factory). Subclasses may provide 
      *         more information as to the nature of the failure.

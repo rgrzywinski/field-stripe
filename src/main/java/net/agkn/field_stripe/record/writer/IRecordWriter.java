@@ -16,8 +16,8 @@ package net.agkn.field_stripe.record.writer;
  * limitations under the License. 
  */
 
-import net.agkn.common.exception.InvalidDataException;
-import net.agkn.common.exception.OperationFailedException;
+import net.agkn.field_stripe.exception.InvalidDataException;
+import net.agkn.field_stripe.exception.OperationFailedException;
 import net.agkn.field_stripe.record.IField;
 import net.agkn.field_stripe.record.reader.IRecordReader;
 

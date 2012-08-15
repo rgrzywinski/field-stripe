@@ -19,7 +19,7 @@ package net.agkn.field_stripe.decode;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.agkn.common.exception.OperationFailedException;
+import net.agkn.field_stripe.exception.OperationFailedException;
 import net.agkn.field_stripe.record.ICompositeType;
 import net.agkn.field_stripe.record.IField;
 import net.agkn.field_stripe.record.IFieldType;

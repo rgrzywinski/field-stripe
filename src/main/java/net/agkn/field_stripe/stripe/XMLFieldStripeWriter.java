@@ -19,7 +19,7 @@ package net.agkn.field_stripe.stripe;
 import java.io.IOException;
 import java.io.Writer;
 
-import net.agkn.common.exception.OperationFailedException;
+import net.agkn.field_stripe.exception.OperationFailedException;
 
 import org.apache.commons.lang.StringEscapeUtils;
 

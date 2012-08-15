@@ -24,8 +24,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import net.agkn.common.exception.NoSuchObjectException;
-import net.agkn.common.exception.OperationFailedException;
+import net.agkn.field_stripe.exception.InvalidDataException;
+import net.agkn.field_stripe.exception.OperationFailedException;
 import net.agkn.field_stripe.encode.FieldStripeEncoderFactory;
 import net.agkn.field_stripe.encode.RootFieldStripeEncoder;
 import net.agkn.field_stripe.record.ICompositeType;

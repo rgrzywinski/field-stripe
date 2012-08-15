@@ -16,8 +16,8 @@ package net.agkn.field_stripe.decode;
  * limitations under the License. 
  */
 
-import net.agkn.common.exception.DeveloperException;
-import net.agkn.common.exception.OperationFailedException;
+import net.agkn.field_stripe.exception.DeveloperException;
+import net.agkn.field_stripe.exception.OperationFailedException;
 import net.agkn.field_stripe.record.IField;
 import net.agkn.field_stripe.record.IFieldType;
 import net.agkn.field_stripe.record.PrimitiveType;

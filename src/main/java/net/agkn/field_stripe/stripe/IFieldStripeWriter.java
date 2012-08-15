@@ -16,8 +16,8 @@ package net.agkn.field_stripe.stripe;
  * limitations under the License. 
  */
 
-import net.agkn.common.exception.OperationFailedException;
 import net.agkn.field_stripe.encode.IFieldStripeEncoder;
+import net.agkn.field_stripe.exception.OperationFailedException;
 
 /**
  * A writer for field stripes. The interface exposes all possible instructions

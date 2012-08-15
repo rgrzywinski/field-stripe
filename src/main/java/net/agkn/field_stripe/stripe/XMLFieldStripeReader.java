@@ -20,8 +20,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 
-import net.agkn.common.exception.DeveloperException;
-import net.agkn.common.exception.OperationFailedException;
+import net.agkn.field_stripe.exception.DeveloperException;
+import net.agkn.field_stripe.exception.OperationFailedException;
 import net.agkn.field_stripe.record.IField;
 import net.agkn.field_stripe.record.PrimitiveType;
 import net.agkn.field_stripe.stripe.Instruction.Kind;

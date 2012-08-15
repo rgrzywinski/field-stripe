@@ -24,9 +24,9 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 
-import net.agkn.common.exception.OperationFailedException;
 import net.agkn.field_stripe.decode.FieldStripeDecoderFactory;
 import net.agkn.field_stripe.decode.RootFieldStripeDecoder;
+import net.agkn.field_stripe.exception.OperationFailedException;
 import net.agkn.field_stripe.record.ICompositeType;
 import net.agkn.field_stripe.record.writer.IRecordWriter;
 import net.agkn.field_stripe.record.writer.JsonArrayRecordWriter;

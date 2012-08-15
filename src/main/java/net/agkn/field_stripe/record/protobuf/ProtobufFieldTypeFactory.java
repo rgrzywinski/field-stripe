@@ -21,10 +21,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import net.agkn.common.exception.DeveloperException;
-import net.agkn.common.exception.InvalidDataException;
-import net.agkn.common.exception.NoSuchObjectException;
-import net.agkn.common.exception.OperationFailedException;
+import net.agkn.field_stripe.exception.DeveloperException;
+import net.agkn.field_stripe.exception.InvalidDataException;
+import net.agkn.field_stripe.exception.NoSuchObjectException;
+import net.agkn.field_stripe.exception.OperationFailedException;
 import net.agkn.field_stripe.record.FieldQualifier;
 import net.agkn.field_stripe.record.ICompositeType;
 import net.agkn.field_stripe.record.IField;
