@@ -29,13 +29,10 @@ import net.agkn.field_stripe.record.ICompositeType;
 import net.agkn.field_stripe.record.IField;
 import net.agkn.field_stripe.record.IFieldType;
 import net.agkn.field_stripe.record.PrimitiveType;
-import net.agkn.protobuf.parser.ProtobufDefinition;
-import net.agkn.protobuf.parser.ProtobufParser;
-import net.agkn.test.common.TestUtils;
-import net.agkn.test.common.mock.MockLog4jAppender;
 
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+
+import com.dyuproject.protostuff.parser.Proto;
 
 /**
  * Unit tests for {@link ProtobufFieldTypeFactory}.
@@ -43,29 +40,15 @@ import org.testng.annotations.Test;
  * @author rgrzywinski
  */
 public class ProtobufFieldTypeFactoryTest {
-    // accessible to set up other expectations (set up in #beforeTest())
-    private MockLog4jAppender logAppender/*everything 'net.agkn'*/;
-    private MockLog4jAppender invaliDefinitionAppender;
-
-    // ========================================================================
-    /**
-     * Set up the mocks before each test method is run.
-     */
-    @BeforeMethod
-    public void beforeTest() {
-        logAppender = TestUtils.addAppender("net.agkn");
-        invaliDefinitionAppender = TestUtils.addAppender("invalid-definition");
-    }
-
-    // ========================================================================
     /**
      * Validates the construction of a {@link IFieldType field type} from a
-     * flat (non-nested) {@link ProtobufDefinition}.
+     * flat (non-nested) Protobuf definition.
      */
     @Test
     public void flatSimpleDefinitionTest() throws Exception {
         final String protobufText =
-            // NOTE:  no package
+            // NOTE:  Protostuff requires a package in the .proto
+            "package package_name;\n" +
             "message Message {\n" + 
             "    optional double   double_field = 1;\n" +
             "    required float    float_field = 2;\n" +
@@ -84,11 +67,8 @@ public class ProtobufFieldTypeFactoryTest {
             // NOTE:  not currently supported
             //"    repeated bytes    bytes_field = 15;\n" +
             "}\n";
-        final ProtobufParser parser = new ProtobufParser();
-        final ProtobufDefinition protobufDefinition = parser.parse("Message.proto", protobufText);
-        final List<ProtobufDefinition> protobufDefinitions = Collections.singletonList(protobufDefinition);
-        assertEquals(logAppender.getEvents().size(), 0, "Number of logged errors");
-        assertEquals(invaliDefinitionAppender.getEvents().size(), 0, "Number of logged invalid definition errors");
+        final Proto protobufDefinition = StringProtoLoader.parseProto(protobufText);
+        final List<Proto> protobufDefinitions = Collections.singletonList(protobufDefinition);
 
         // ....................................................................
         final ProtobufFieldTypeFactory fieldTypeFactory = new ProtobufFieldTypeFactory();
@@ -97,7 +77,7 @@ public class ProtobufFieldTypeFactoryTest {
 
         assertTrue(fieldType.isComposite(), "Composite field type");
         final ICompositeType compositeType = (ICompositeType)fieldType;
-        assertEquals(compositeType.getName(), "Message", "Message name");
+        assertEquals(compositeType.getName(), "package_name.Message", "Message name");
         assertEquals(compositeType.getFields().size(), 14, "Number of fields");
         assertPrimitiveField(compositeType.getField(0), 1/*index*/, FieldQualifier.ZERO_OR_ONE, PrimitiveType.DOUBLE, "double_field");
         assertPath(compositeType.getField(0).getPath(), compositeType.getField(0));
@@ -155,11 +135,8 @@ public class ProtobufFieldTypeFactoryTest {
             "    required NestedMessage required_nestedMessage = 4;\n" +
             "    optional NestedMessage optional_nestedMessage = 5;\n"/*2nd field with same type to ensure tree cloning works*/ +
             "}\n";
-        final ProtobufParser parser = new ProtobufParser();
-        final ProtobufDefinition protobufDefinition = parser.parse("Message.proto", protobufText);
-        final List<ProtobufDefinition> protobufDefinitions = Collections.singletonList(protobufDefinition);
-        assertEquals(logAppender.getEvents().size(), 0, "Number of logged errors");
-        assertEquals(invaliDefinitionAppender.getEvents().size(), 0, "Number of logged invalid definition errors");
+        final Proto protobufDefinition = StringProtoLoader.parseProto(protobufText);
+        final List<Proto> protobufDefinitions = Collections.singletonList(protobufDefinition);
 
         // ....................................................................
         // create a type from the outer Message
@@ -178,9 +155,9 @@ public class ProtobufFieldTypeFactoryTest {
             assertPath(compositeType.getField(1).getPath(), compositeType.getField(1));
             assertPrimitiveField(compositeType.getField(2), 3/*index*/, FieldQualifier.ZERO_OR_MORE, PrimitiveType.INT, "int32_field");
             assertPath(compositeType.getField(2).getPath(), compositeType.getField(2));
-            assertCompositeField(compositeType.getField(3), 4/*index*/, FieldQualifier.ONE, "package_name.Message$NestedMessage", "required_nestedMessage");
+            assertCompositeField(compositeType.getField(3), 4/*index*/, FieldQualifier.ONE, "package_name.Message.NestedMessage", "required_nestedMessage");
             assertPath(compositeType.getField(3).getPath(), compositeType.getField(3));
-            assertCompositeField(compositeType.getField(4), 5/*index*/, FieldQualifier.ZERO_OR_ONE, "package_name.Message$NestedMessage", "optional_nestedMessage");
+            assertCompositeField(compositeType.getField(4), 5/*index*/, FieldQualifier.ZERO_OR_ONE, "package_name.Message.NestedMessage", "optional_nestedMessage");
             assertPath(compositeType.getField(4).getPath(), compositeType.getField(4));
 
               // NOTE:  if the deep clone of a field and its type was not 
@@ -188,7 +165,7 @@ public class ProtobufFieldTypeFactoryTest {
               //        (since the type hierarchy would have been shared between
               //        two fields)
               final ICompositeType requiredNestedCompositeType = (ICompositeType)compositeType.getFields().get(3/*required_nestedMessage*/).getType();
-              assertEquals(requiredNestedCompositeType.getName(), "package_name.Message$NestedMessage", "Message name");
+              assertEquals(requiredNestedCompositeType.getName(), "package_name.Message.NestedMessage", "Message name");
               assertEquals(requiredNestedCompositeType.getFields().size(), 4, "Number of fields");
               assertPrimitiveField(compositeType.getField(3/*required_nestedMessage*/, 0), 1/*index*/, FieldQualifier.ZERO_OR_ONE, PrimitiveType.LONG, "int64_field");
               assertPath(compositeType.getField(3/*required_nestedMessage*/, 0).getPath(), compositeType.getField(3/*required_nestedMessage*/), compositeType.getField(3/*required_nestedMessage*/, 0));
@@ -196,11 +173,11 @@ public class ProtobufFieldTypeFactoryTest {
               assertPath(compositeType.getField(3/*required_nestedMessage*/, 1).getPath(), compositeType.getField(3/*required_nestedMessage*/), compositeType.getField(3/*required_nestedMessage*/, 1));
               assertPrimitiveField(compositeType.getField(3/*required_nestedMessage*/, 2), 3/*index*/, FieldQualifier.ZERO_OR_MORE, PrimitiveType.LONG, "uint64_field");
               assertPath(compositeType.getField(3/*required_nestedMessage*/, 2).getPath(), compositeType.getField(3/*required_nestedMessage*/), compositeType.getField(3/*required_nestedMessage*/, 2));
-              assertCompositeField(compositeType.getField(3/*required_nestedMessage*/, 3), 4/*index*/, FieldQualifier.ONE, "package_name.Message$NestedMessage$NestedNestedMessage", "nestedNestedMessage");
+              assertCompositeField(compositeType.getField(3/*required_nestedMessage*/, 3), 4/*index*/, FieldQualifier.ONE, "package_name.Message.NestedMessage.NestedNestedMessage", "nestedNestedMessage");
               assertPath(compositeType.getField(3/*required_nestedMessage*/, 3).getPath(), compositeType.getField(3/*required_nestedMessage*/), compositeType.getField(3/*required_nestedMessage*/, 3));
 
                 final ICompositeType requiredNestedNestedCompositeType = (ICompositeType)requiredNestedCompositeType.getFields().get(3/*nestedNestedMessage*/).getType();
-                assertEquals(requiredNestedNestedCompositeType.getName(), "package_name.Message$NestedMessage$NestedNestedMessage", "Message name");
+                assertEquals(requiredNestedNestedCompositeType.getName(), "package_name.Message.NestedMessage.NestedNestedMessage", "Message name");
                 assertEquals(requiredNestedNestedCompositeType.getFields().size(), 3, "Number of fields");
                 assertPrimitiveField(compositeType.getField(3/*required_nestedMessage*/, 3/*nestedNestedMessage*/, 0), 1/*index*/, FieldQualifier.ZERO_OR_ONE, PrimitiveType.INT, "sint32_field");
                 assertPath(compositeType.getField(3/*required_nestedMessage*/, 3/*nestedNestedMessage*/, 0).getPath(), compositeType.getField(3/*required_nestedMessage*/), compositeType.getField(3/*required_nestedMessage*/, 3/*nestedNestedMessage*/), compositeType.getField(3/*required_nestedMessage*/, 3/*nestedNestedMessage*/, 0));
@@ -210,7 +187,7 @@ public class ProtobufFieldTypeFactoryTest {
                 assertPath(compositeType.getField(3/*required_nestedMessage*/, 3/*nestedNestedMessage*/, 2).getPath(), compositeType.getField(3/*required_nestedMessage*/), compositeType.getField(3/*required_nestedMessage*/, 3/*nestedNestedMessage*/), compositeType.getField(3/*required_nestedMessage*/, 3/*nestedNestedMessage*/, 2));
 
               final ICompositeType optionalNestedCompositeType = (ICompositeType)compositeType.getFields().get(4/*optional_nestedMessage*/).getType();
-              assertEquals(optionalNestedCompositeType.getName(), "package_name.Message$NestedMessage", "Message name");
+              assertEquals(optionalNestedCompositeType.getName(), "package_name.Message.NestedMessage", "Message name");
               assertEquals(optionalNestedCompositeType.getFields().size(), 4, "Number of fields");
               assertPrimitiveField(compositeType.getField(4/*optional_nestedMessage*/, 0), 1/*index*/, FieldQualifier.ZERO_OR_ONE, PrimitiveType.LONG, "int64_field");
               assertPath(compositeType.getField(4/*optional_nestedMessage*/, 0).getPath(), compositeType.getField(4/*optional_nestedMessage*/), compositeType.getField(4/*optional_nestedMessage*/, 0));
@@ -218,11 +195,11 @@ public class ProtobufFieldTypeFactoryTest {
               assertPath(compositeType.getField(4/*optional_nestedMessage*/, 1).getPath(), compositeType.getField(4/*optional_nestedMessage*/), compositeType.getField(4/*optional_nestedMessage*/, 1));
               assertPrimitiveField(compositeType.getField(4/*optional_nestedMessage*/, 2), 3/*index*/, FieldQualifier.ZERO_OR_MORE, PrimitiveType.LONG, "uint64_field");
               assertPath(compositeType.getField(4/*optional_nestedMessage*/, 2).getPath(), compositeType.getField(4/*optional_nestedMessage*/), compositeType.getField(4/*optional_nestedMessage*/, 2));
-              assertCompositeField(compositeType.getField(4/*optional_nestedMessage*/, 3), 4/*index*/, FieldQualifier.ONE, "package_name.Message$NestedMessage$NestedNestedMessage", "nestedNestedMessage");
+              assertCompositeField(compositeType.getField(4/*optional_nestedMessage*/, 3), 4/*index*/, FieldQualifier.ONE, "package_name.Message.NestedMessage.NestedNestedMessage", "nestedNestedMessage");
               assertPath(compositeType.getField(4/*optional_nestedMessage*/, 3).getPath(), compositeType.getField(4/*optional_nestedMessage*/), compositeType.getField(4/*optional_nestedMessage*/, 3));
 
                 final ICompositeType optionalNestedNestedCompositeType = (ICompositeType)optionalNestedCompositeType.getFields().get(3/*nestedNestedMessage*/).getType();
-                assertEquals(optionalNestedNestedCompositeType.getName(), "package_name.Message$NestedMessage$NestedNestedMessage", "Message name");
+                assertEquals(optionalNestedNestedCompositeType.getName(), "package_name.Message.NestedMessage.NestedNestedMessage", "Message name");
                 assertEquals(optionalNestedNestedCompositeType.getFields().size(), 3, "Number of fields");
                 assertPrimitiveField(compositeType.getField(4/*optional_nestedMessage*/, 3/*nestedNestedMessage*/, 0), 1/*index*/, FieldQualifier.ZERO_OR_ONE, PrimitiveType.INT, "sint32_field");
                 assertPath(compositeType.getField(4/*optional_nestedMessage*/, 3/*nestedNestedMessage*/, 0).getPath(), compositeType.getField(4/*optional_nestedMessage*/), compositeType.getField(4/*optional_nestedMessage*/, 3/*nestedNestedMessage*/), compositeType.getField(4/*optional_nestedMessage*/, 3/*nestedNestedMessage*/, 0));
@@ -240,7 +217,7 @@ public class ProtobufFieldTypeFactoryTest {
 
             assertTrue(fieldType.isComposite(), "Composite field type");
             final ICompositeType compositeType = (ICompositeType)fieldType;
-            assertEquals(compositeType.getName(), "package_name.Message$NestedMessage", "Message name");
+            assertEquals(compositeType.getName(), "package_name.Message.NestedMessage", "Message name");
             assertEquals(compositeType.getFields().size(), 4, "Number of fields");
             assertPrimitiveField(compositeType.getField(0), 1/*index*/, FieldQualifier.ZERO_OR_ONE, PrimitiveType.LONG, "int64_field");
             assertPath(compositeType.getField(0).getPath(), compositeType.getField(0));
@@ -248,11 +225,11 @@ public class ProtobufFieldTypeFactoryTest {
             assertPath(compositeType.getField(1).getPath(), compositeType.getField(1));
             assertPrimitiveField(compositeType.getField(2), 3/*index*/, FieldQualifier.ZERO_OR_MORE, PrimitiveType.LONG, "uint64_field");
             assertPath(compositeType.getField(2).getPath(), compositeType.getField(2));
-            assertCompositeField(compositeType.getField(3), 4/*index*/, FieldQualifier.ONE, "package_name.Message$NestedMessage$NestedNestedMessage", "nestedNestedMessage");
+            assertCompositeField(compositeType.getField(3), 4/*index*/, FieldQualifier.ONE, "package_name.Message.NestedMessage.NestedNestedMessage", "nestedNestedMessage");
             assertPath(compositeType.getField(3).getPath(), compositeType.getField(3));
 
             final ICompositeType nestedCompositeType = (ICompositeType)compositeType.getFields().get(3/*nestedNestedMessage*/).getType();
-            assertEquals(nestedCompositeType.getName(), "package_name.Message$NestedMessage$NestedNestedMessage", "Message name");
+            assertEquals(nestedCompositeType.getName(), "package_name.Message.NestedMessage.NestedNestedMessage", "Message name");
             assertEquals(nestedCompositeType.getFields().size(), 3, "Number of fields");
             assertPrimitiveField(compositeType.getField(3/*nestedeNestedMessage*/, 0), 1/*index*/, FieldQualifier.ZERO_OR_ONE, PrimitiveType.INT, "sint32_field");
             assertPath(compositeType.getField(3/*nestedeNestedMessage*/, 0).getPath(), compositeType.getField(3/*nestedeNestedMessage*/), compositeType.getField(3/*nestedeNestedMessage*/, 0));
@@ -270,7 +247,7 @@ public class ProtobufFieldTypeFactoryTest {
 
             assertTrue(fieldType.isComposite(), "Composite field type");
             final ICompositeType compositeType = (ICompositeType)fieldType;
-            assertEquals(compositeType.getName(), "package_name.Message$NestedMessage$NestedNestedMessage", "Message name");
+            assertEquals(compositeType.getName(), "package_name.Message.NestedMessage.NestedNestedMessage", "Message name");
             assertEquals(compositeType.getFields().size(), 3, "Number of fields");
             assertPrimitiveField(compositeType.getField(0), 1/*index*/, FieldQualifier.ZERO_OR_ONE, PrimitiveType.INT, "sint32_field");
             assertPath(compositeType.getField(0).getPath(), compositeType.getField(0));

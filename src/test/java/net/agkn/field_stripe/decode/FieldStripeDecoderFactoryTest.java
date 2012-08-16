@@ -23,8 +23,8 @@ import static org.testng.Assert.assertTrue;
 
 import java.util.List;
 
-import net.agkn.common.exception.DeveloperException;
 import net.agkn.field_stripe.encode.SchemaBuilder;
+import net.agkn.field_stripe.exception.DeveloperException;
 import net.agkn.field_stripe.record.ICompositeType;
 import net.agkn.field_stripe.record.IField;
 import net.agkn.field_stripe.stripe.IFieldStripeReader;
@@ -50,6 +50,7 @@ public class FieldStripeDecoderFactoryTest {
     @Test
     public void flatSchemaTest() throws Exception {
         final String protobufText =
+            "package package_name;\n"/*required by Protostuff*/ +
             "message Message {\n" + 
             "    optional double   double_field = 1;\n" +
             "    required float    float_field = 2;\n" +
@@ -89,6 +90,7 @@ public class FieldStripeDecoderFactoryTest {
     @Test
     public void oneLevelNestedSchemaTest() throws Exception {
         final String protobufText =
+            "package package_name;\n"/*required by Protostuff*/ +
             "message Message {\n" + 
             "    optional double   double_field = 1;\n" +
             "    repeated int64    int64_field = 2;\n" +
@@ -147,6 +149,7 @@ public class FieldStripeDecoderFactoryTest {
     @Test
     public void oneLevelNestedSchemaRepeatedParentTest() throws Exception {
         final String protobufText =
+            "package package_name;\n"/*required by Protostuff*/ +
             "message Message {\n" + 
             "    optional double   double_field = 1;\n" +
             "    repeated int64    int64_field = 2;\n" +
@@ -197,6 +200,7 @@ public class FieldStripeDecoderFactoryTest {
         // NOTE:  this matches the "Employee" example in the "Efficient Field-
         //        Striped, Nested Disk-backed Record Storage" document
         final String protobufText =
+            "package package_name;\n"/*required by Protostuff*/ +
             "message Employee {\n" + 
             "    required int64    RecId = 1;\n" +
             "    required int64    EmpId = 2;\n" +

@@ -19,15 +19,14 @@ package net.agkn.field_stripe;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import net.agkn.field_stripe.exception.InvalidDataException;
-import net.agkn.field_stripe.exception.OperationFailedException;
 import net.agkn.field_stripe.encode.FieldStripeEncoderFactory;
 import net.agkn.field_stripe.encode.RootFieldStripeEncoder;
+import net.agkn.field_stripe.exception.NoSuchObjectException;
+import net.agkn.field_stripe.exception.OperationFailedException;
 import net.agkn.field_stripe.record.ICompositeType;
 import net.agkn.field_stripe.record.IFieldType;
 import net.agkn.field_stripe.record.protobuf.ProtobufFieldTypeFactory;
@@ -36,11 +35,11 @@ import net.agkn.field_stripe.record.reader.SmartJsonArrayRecordReader;
 import net.agkn.field_stripe.stripe.BinaryVLenFieldStripeWriter;
 import net.agkn.field_stripe.stripe.IFieldStripeWriter;
 import net.agkn.field_stripe.stripe.IFieldStripeWriterFactory;
-import net.agkn.protobuf.parser.ParseException;
-import net.agkn.protobuf.parser.ProtobufDefinition;
-import net.agkn.protobuf.parser.ProtobufParser;
 
 import org.apache.commons.io.FileUtils;
+
+import com.dyuproject.protostuff.parser.Proto;
+import com.dyuproject.protostuff.parser.ProtoUtil;
 
 /**
  * An command-line entry point into a file-based record encoder that uses 
@@ -113,7 +112,7 @@ public class FileRecordEncoder {
      * {@link ICompositeType schema} and returned.
      */
     public static ICompositeType createSchema(final File protobufPath, final String fqMessageName) {
-        final List<ProtobufDefinition> protobufDefinitions = parseProtobufDefinitions(protobufPath);
+        final List<Proto> protobufDefinitions = parseProtobufDefinitions(protobufPath);
         final ProtobufFieldTypeFactory fieldTypeFactory = new ProtobufFieldTypeFactory();
         try {
             final IFieldType fieldType = fieldTypeFactory.createFieldType(protobufDefinitions, fqMessageName);
@@ -137,10 +136,8 @@ public class FileRecordEncoder {
     /**
      * Parse all Protobuf (*.proto) files in the specified path.
      */
-    public static List<ProtobufDefinition> parseProtobufDefinitions(final File protobufPath) {
-        final ProtobufParser parser = new ProtobufParser();
-
-        final List<ProtobufDefinition> protobufDefinitions = new ArrayList<ProtobufDefinition>();
+    public static List<Proto> parseProtobufDefinitions(final File protobufPath) {
+        final List<Proto> protobufDefinitions = new ArrayList<Proto>();
         final Iterator<File> protobufFiles = FileUtils.iterateFiles(protobufPath, new String[] { "proto" }, true/*recursively*/);
         while(protobufFiles.hasNext()) {
             final File protobufFile = protobufFiles.next();
@@ -148,15 +145,10 @@ public class FileRecordEncoder {
 
             // CHECK:  should this continue if there's an error parsing?
             try {
-                final Reader fileReader = new FileReader(protobufFile);
-                protobufDefinitions.add(parser.parse(protobufFile.getAbsolutePath(), fileReader));
-            } catch(final FileNotFoundException fnfe) {
-                // NOTE:  the only way that this could occur is if the file was 
-                //        moved / deleted between the earlier check and this call
-                System.err.println("Protobuf IDL file moved / deleted: " + protobufFile.getAbsolutePath());
-            } catch(final ParseException pe) {
+                protobufDefinitions.add(ProtoUtil.parseProto(protobufFile));
+            } catch(final RuntimeException re) {
                 System.err.println("An error occurred while parsing: " + protobufFile.getAbsolutePath());
-                System.err.println(pe.getLocalizedMessage());
+                System.err.println(re.getLocalizedMessage());
             }
         }
         return protobufDefinitions;

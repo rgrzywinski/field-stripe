@@ -20,8 +20,8 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.agkn.common.exception.NoSuchObjectException;
-import net.agkn.common.exception.OperationFailedException;
+import net.agkn.field_stripe.exception.NoSuchObjectException;
+import net.agkn.field_stripe.exception.OperationFailedException;
 import net.agkn.field_stripe.record.IField;
 
 /**

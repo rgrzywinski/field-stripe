@@ -31,16 +31,17 @@ import net.agkn.field_stripe.record.IField;
 import net.agkn.field_stripe.record.IFieldType;
 import net.agkn.field_stripe.record.Path;
 import net.agkn.field_stripe.record.PrimitiveType;
-import net.agkn.protobuf.parser.MessageDefinition;
-import net.agkn.protobuf.parser.MessageDefinition.FieldLabel;
-import net.agkn.protobuf.parser.MessageDefinition.FieldType;
-import net.agkn.protobuf.parser.MessageMatcher;
-import net.agkn.protobuf.parser.ProtobufDefinition;
+
+import com.dyuproject.protostuff.parser.Field;
+import com.dyuproject.protostuff.parser.Field.Modifier;
+import com.dyuproject.protostuff.parser.Message;
+import com.dyuproject.protostuff.parser.MessageField;
+import com.dyuproject.protostuff.parser.Proto;
 
 /**
  * A combination factory and builder for {@link IFieldType field types} (both
  * {@link PrimitiveType primitive} and {@link ICompositeType composite}) from
- * {@link ProtobufDefinition Protobuf definitions}. {@link #createFieldType(List, String)}
+ * {@link Proto Protobuf definitions}. {@link #createFieldType(List, String)}
  * is used to create a field type from a list of Protobuf definitions for a
  * specific fully-qualified message definition name.
  *
@@ -48,8 +49,7 @@ import net.agkn.protobuf.parser.ProtobufDefinition;
  */
 public class ProtobufFieldTypeFactory {
     /**
-     * @param  protobufDefinitions the collection of {@link ProtobufDefinition#validate() valid}
-     *         (though not necessarily normalized) {@link ProtobufDefinition Protobuf definitions}
+     * @param  protobufDefinitions the collection of {@link Proto Protobuf definitions}
      *         in which the specified definition name must exist and from which
      *         all dependencies are resolved. This cannot be <code>null</code>
      *         or empty.
@@ -65,32 +65,31 @@ public class ProtobufFieldTypeFactory {
      *         its dependencies cannot be resolved within the specified list of 
      *         Protobuf definitions. 
      */
-    public IFieldType createFieldType(final List<ProtobufDefinition> protobufDefinitions, final String definitionName)
+    // NOTE:  theoretically if the Proto's are built there should not be circular
+    //        dependencies. (Though an actual test of Protostuff's parser has
+    //        not been performed to make sure.)
+    public IFieldType createFieldType(final List<Proto> protobufDefinitions, final String definitionName)
             throws OperationFailedException, NoSuchObjectException {
-        // normalize all MessageDefinitions for consistency in the remainder of
-        // the construction process
-        for(final ProtobufDefinition protobufDefinition : protobufDefinitions)
-            for(final MessageDefinition messageDefinition : protobufDefinition.messageDefinitions)
-                messageDefinition.normalize();
-
-        // find the MessageDefinition for the specified name
-        final MessageMatcher matcher = new MessageMatcher(protobufDefinitions);
-        final MessageDefinition messageDefinition = matcher.search(definitionName);
+        // find the Message for the specified name by doing a lookup on each
+        // Protobuf definition
+        Message messageDefinition = null/*none to start*/;
+        for(final Proto protobufDefinition : protobufDefinitions) {
+            if((messageDefinition = LookupUtil.lookupMessage(protobufDefinition, definitionName)) != null)
+                break/*found!*/;
+            /* else -- not a match in this Protobuf, keep looking */
+        }
         if(messageDefinition == null) throw new NoSuchObjectException("There is no message that matches the name \"" + definitionName + "\".");
-        return build(matcher, messageDefinition);
+        return build(messageDefinition);
     }
 
     // ========================================================================
     /**
-     * Builds a {@link IFieldType field type} for the specified {@link MessageDefinition message definition},
+     * Builds a {@link IFieldType field type} for the specified {@link Message message definition},
      * recursively builds its dependencies and then {@link ProtobufCompositeType#resolve(net.agkn.field_stripe.record.Path) resolves}
      * the {@link Path paths}.  
      * 
-     * @param  matcher the {@link MessageMatcher matcher} used to resolve message
-     *         definition field types. This cannot be <code>null</code>.
-     * @param  messageDefinition the <code>MessageDefinition</code> that defines
-     *         the type to be built. This cannot be <code>null</code> and must 
-     *         have been validated and normalized.
+     * @param  messageDefinition the <code>Message</code> that defines the type
+     *         to be built. This cannot be <code>null</code>.
      * @return The <code>IFieldType</code> for the specified message definition.
      *         This will never be <code>null</code>.
      * @throws OperationFailedException if the definitions are not aligned such
@@ -98,13 +97,13 @@ public class ProtobufFieldTypeFactory {
      */
     // NOTE:  this method is broken out simply to provide a more sane interface
     //        into the builder aspect of this factory
-    private IFieldType build(final MessageMatcher matcher, final MessageDefinition messageDefinition)
+    private IFieldType build(final Message messageDefinition)
             throws OperationFailedException {
         // recursively build the field types for the message definition
-        // NOTE:  by definition a MessageDefinition is represented by a
-        //        ICompositeType (rather than, say, a PrimitiveType)
-        final Map<MessageDefinition, ProtobufCompositeType> messageToFieldTypeMap = new HashMap<MessageDefinition, ProtobufCompositeType>();
-        final ProtobufCompositeType fieldType = build(messageToFieldTypeMap, matcher, messageDefinition);
+        // NOTE:  by definition a Message is represented by a ICompositeType 
+        //        (rather than, say, a PrimitiveType)
+        final Map<Message, ProtobufCompositeType> messageToFieldTypeMap = new HashMap<Message, ProtobufCompositeType>();
+        final ProtobufCompositeType fieldType = build(messageToFieldTypeMap, messageDefinition);
 
         // resolve the paths starting at the root
         fieldType.resolve(new Path(/*root path*/));
@@ -114,9 +113,9 @@ public class ProtobufFieldTypeFactory {
 
     /**
      * Recursively builds {@link IFieldType field types} starting with the 
-     * specified {@link MessageDefinition message definition}. As the message 
-     * definitions are built (or started to be built) they are added to the 
-     * specified map of message definition to field type. There are three states:<p/>
+     * specified {@link Message message definition}. As the message definitions
+     * are built (or started to be built) they are added to the specified map 
+     * of message definition to field type. There are three states:<p/>
      * 
      * <ul>
      *   <li>a message definition is not present in the map: the message 
@@ -128,22 +127,20 @@ public class ProtobufFieldTypeFactory {
      *       the type is completely built;</li>
      * </ul> 
      * 
-     * @param  messageToFieldTypeMap the map of <code>MessageDefinition</code> 
-     *         to its built <code>ICompositeType</code> (including all of its 
-     *         dependencies). See the above JavaDoc for more information. This
-     *         cannot be <code>null</code> though it may be empty.
-     * @param  matcher the {@link MessageMatcher matcher} used to resolve message
-     *         definition field types. This cannot be <code>null</code>.
-     * @param  messageDefinition the <code>MessageDefinition</code> whose field  
-     *         type is to be built. This must have already been validated and 
-     *         normalized. This cannot be <code>null</code>.
+     * @param  messageToFieldTypeMap the map of <code>Message</code> to its
+     *         built <code>ICompositeType</code> (including all of its dependencies). 
+     *         See the above JavaDoc for more information. This cannot be 
+     *         <code>null</code> though it may be empty.
+     * @param  messageDefinition the <code>Message</code> whose field type is 
+     *         to be built. This must have already been validated and normalized. 
+     *         This cannot be <code>null</code>.
      * @return the completely built {@link IFieldType field type} (specifically
      *         a {@link ProtobufCompositeType}). This will never be <code>null</code>.
      * @throws OperationFailedException if the definitions are not aligned such
      *         that a field type could be produced.
      */
-    private ProtobufCompositeType build(final Map<MessageDefinition, ProtobufCompositeType> messageToFieldTypeMap,
-                                        final MessageMatcher matcher, final MessageDefinition messageDefinition)
+    private ProtobufCompositeType build(final Map<Message, ProtobufCompositeType> messageToFieldTypeMap,
+                                        final Message messageDefinition)
             throws OperationFailedException {
         // if the message definition exists in the map:
         // 1.  if there is a non-null field type (value) then it has been
@@ -160,7 +157,7 @@ public class ProtobufFieldTypeFactory {
         if(messageToFieldTypeMap.containsKey(messageDefinition)) {
             final ProtobufCompositeType fieldType =  messageToFieldTypeMap.get(messageDefinition);
             if(fieldType != null) return fieldType.clone()/*completely built (and clone by contract)*/;
-            throw new InvalidDataException("Circular dependency in message definition \"" + messageDefinition.fqName + "\".");
+            throw new InvalidDataException("Circular dependency in message definition \"" + messageDefinition.getFullName() + "\".");
         } /* else -- the message definition has not yet started being built */
 
         // the message definition is added to the map (with no value to start)
@@ -170,8 +167,8 @@ public class ProtobufFieldTypeFactory {
 
         // build the fields of the type then assemble the fields themselves and
         // finally add it to the map to signify that it is complete
-        final List<IField> fields = assembleFields(messageToFieldTypeMap, matcher, messageDefinition);
-        final ProtobufCompositeType fieldType = new ProtobufCompositeType(messageDefinition.fqName, fields);
+        final List<IField> fields = assembleFields(messageToFieldTypeMap, messageDefinition);
+        final ProtobufCompositeType fieldType = new ProtobufCompositeType(messageDefinition.getFullName(), fields);
         messageToFieldTypeMap.put(messageDefinition, fieldType)/*finished being built*/;
 
         return fieldType;
@@ -179,44 +176,34 @@ public class ProtobufFieldTypeFactory {
 
     // ........................................................................
     /**
-     * Assembles {@link IField fields} from the specified {@link MessageDefinition message definition}.
-     * All {@link IFieldType field types} will have been resolved.
+     * Assembles {@link IField fields} from the specified {@link Message message definition}.
      *
-     * @param  messageToFieldTypeMap the map of <code>MessageDefinition</code> 
-     *         to its built <code>ICompositeType</code> (including all of its  
-     *         dependencies) used to resolve composite fields. This cannot be  
-     *         <code>null</code> though it may be empty.
-     * @param  matcher the {@link MessageMatcher matcher} used to resolve message
-     *         definition field types. This cannot be <code>null</code>.
-     * @param  messageDefinition the <code>MessageDefinition</code> whose fields
-     *         are to be resolved into <code>IFieldType</code>s. This must have 
-     *         already been validated and normalized. This cannot be <code>null</code>.
+     * @param  messageToFieldTypeMap the map of <code>Message</code> to its
+     *         built <code>ICompositeType</code> (including all of its dependencies)
+     *         used to resolve composite fields. This cannot be <code>null</code>
+     *         though it may be empty.
+     * @param  messageDefinition the <code>Message</code> whose fields are to
+     *         be resolved into <code>IFieldType</code>s. This cannot be <code>null</code>.
      * @return the list of <code>IFieldType</code>s for the specified message 
      *         definition. This will never be <code>null</code> though it may 
      *         be empty.
      * @throws OperationFailedException if a message field type was not supported
      *         or was not known.
      */
-    private List<IField> assembleFields(final Map<MessageDefinition, ProtobufCompositeType> messageToFieldTypeMap,
-                                        final MessageMatcher matcher, final MessageDefinition messageDefinition) 
+    private List<IField> assembleFields(final Map<Message, ProtobufCompositeType> messageToFieldTypeMap,
+                                        final Message messageDefinition) 
             throws OperationFailedException {
         // resolve each message definition field
-        // NOTE:  the fields have already been normalized by contract
-        final List<IField> fields = new ArrayList<IField>(messageDefinition.fields.size());
-        for(final MessageDefinition.Field field : messageDefinition.fields) {
-            // determine the field type -- either primitive or composite. If
-            // the type string matches a primitive then it is a primitive.
-            // Otherwise the matcher is used to resolve the type.
-            final MessageDefinition.FieldType type = MessageDefinition.FieldType.get(field.typeString);
+        final List<IField> fields = new ArrayList<IField>(messageDefinition.getFieldCount());
+        for(final Field<?> field : messageDefinition.getFields()) {
             final IFieldType resolvedFieldType;
-            if(type == null/*was not a primitive (is a composite)*/) {
-                final MessageDefinition resolvedDefinition = matcher.search(messageDefinition, field.typeString);
-                if(resolvedDefinition == null/*not found*/) throw new NoSuchObjectException("Could not resolve type \"" + field.typeString + "\" for field \"" + field.name + "\" in message definition \"" + messageDefinition.fqName + "\".");
-                resolvedFieldType = build(messageToFieldTypeMap, matcher, resolvedDefinition);
-            } else { /*type != null -- was a primitive*/
-                resolvedFieldType = mapPrimitiveType(type);
+            if(field.isMessageField()) {/*composite*/
+                final MessageField messageField = (MessageField)field/*by #isMessageField() definition*/;
+                resolvedFieldType = build(messageToFieldTypeMap, messageField.getMessage());
+            } else { /*primitive*/
+                resolvedFieldType = mapPrimitiveType(field.getClass());
             }
-            fields.add(new ProtobufField(field.index, mapFieldLabel(field.label), resolvedFieldType, field.name)); 
+            fields.add(new ProtobufField(field.getNumber()/*index*/, mapFieldModifier(field.getModifier()), resolvedFieldType, field.getName())); 
         }
 
         return fields;
@@ -224,11 +211,11 @@ public class ProtobufFieldTypeFactory {
 
     // ========================================================================
     /**
-     * A convenience method that maps a {@link MessageDefinition.FieldLabel field label}
+     * A convenience method that maps a {@link Field.Modifier field modifier}
      * to a {@link FieldQualifier}.
      */
-    private static FieldQualifier mapFieldLabel(final FieldLabel fieldLabel) {
-        switch(fieldLabel) {
+    private static FieldQualifier mapFieldModifier(final Modifier fieldModifier) {
+        switch(fieldModifier) {
             case REQUIRED:
                 return FieldQualifier.ONE;
             case OPTIONAL:
@@ -237,51 +224,48 @@ public class ProtobufFieldTypeFactory {
                 return FieldQualifier.ZERO_OR_MORE;
 
             default:
-                throw new DeveloperException("Unknown Protobuf field label \"" + fieldLabel + "\".");
+                throw new DeveloperException("Unknown Protobuf field modifier \"" + fieldModifier + "\".");
         }
     }
 
     /**
-     * A convenience method that maps a primitive {@link FieldType field type}
-     * to a {@link PrimitiveType}. Conversion is performed according to the
+     * A convenience method that maps a primitive field type to a {@link PrimitiveType}. 
+     * Conversion is performed according to the
      * <a href="https://developers.google.com/protocol-buffers/docs/proto">Scalar Value Types</a>
      * section.
      * 
-     * @param  fieldType the {@link MessageDefinition.FieldType} for which the
-     *         {@link PrimitiveType} is desired. This cannot be <code>null</code>.
-     * @return the {@link PrimitiveType} for the specified {@link MessageDefinition.FieldType}.
-     *         This will never be <code>null</code>.
+     * @param  fieldType the type of field for which the {@link PrimitiveType} 
+     *         is desired. This cannot be <code>null</code>.
+     * @return the {@link PrimitiveType} for the specified field type. This 
+     *         will never be <code>null</code>.
      */
-    private static PrimitiveType mapPrimitiveType(final FieldType fieldType) {
-        switch(fieldType) {
-            case DOUBLE:
-                return PrimitiveType.DOUBLE;
-            case FLOAT:
-                return PrimitiveType.FLOAT;
+    private static PrimitiveType mapPrimitiveType(final Class<?> fieldType) {
+        if(Field.Double.class.isAssignableFrom(fieldType))
+            return PrimitiveType.DOUBLE;
+        if(Field.Float.class.isAssignableFrom(fieldType))
+            return PrimitiveType.FLOAT;
 
-            case INT32:
-            case UINT32:
-            case SINT32:
-            case FIXED32:
-            case SFIXED32:
-                return PrimitiveType.INT;
+        if(Field.Int32.class.isAssignableFrom(fieldType) ||
+           Field.UInt32.class.isAssignableFrom(fieldType) ||
+           Field.SInt32.class.isAssignableFrom(fieldType) ||
+           Field.Fixed32.class.isAssignableFrom(fieldType) ||
+           Field.SFixed32.class.isAssignableFrom(fieldType) )
+            return PrimitiveType.INT;
 
-            case INT64:
-            case UINT64:
-            case SINT64:
-            case FIXED64:
-            case SFIXED64:
-                return PrimitiveType.LONG;
+        if(Field.Int64.class.isAssignableFrom(fieldType) ||
+           Field.UInt64.class.isAssignableFrom(fieldType) ||
+           Field.SInt64.class.isAssignableFrom(fieldType) ||
+           Field.Fixed64.class.isAssignableFrom(fieldType) ||
+           Field.SFixed64.class.isAssignableFrom(fieldType) )
+            return PrimitiveType.LONG;
 
-            case BOOL:
-                return PrimitiveType.BOOLEAN;
-            case STRING:
-                return PrimitiveType.STRING;
-            case BYTES:
-                throw new UnsupportedOperationException("Protobuf FieldType \"bytes\" is not currently supported.");
+        if(Field.Bool.class.isAssignableFrom(fieldType))
+            return PrimitiveType.BOOLEAN;
+        if(Field.String.class.isAssignableFrom(fieldType))
+            return PrimitiveType.STRING;
+        if(Field.Bytes.class.isAssignableFrom(fieldType))
+            throw new UnsupportedOperationException("Protobuf FieldType \"bytes\" is not currently supported.");
 
-            default:
-                throw new DeveloperException("Unknown Protobuf FieldType \"" + fieldType + "\".");
-        }
+        throw new DeveloperException("Unknown Protobuf FieldType \"" + fieldType + "\".");
     }
 }

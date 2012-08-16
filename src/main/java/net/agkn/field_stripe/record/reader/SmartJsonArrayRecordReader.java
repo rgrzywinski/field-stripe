@@ -24,9 +24,9 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.List;
 
-import net.agkn.common.exception.DeveloperException;
-import net.agkn.common.exception.InvalidDataException;
-import net.agkn.common.exception.OperationFailedException;
+import net.agkn.field_stripe.exception.DeveloperException;
+import net.agkn.field_stripe.exception.InvalidDataException;
+import net.agkn.field_stripe.exception.OperationFailedException;
 import net.jcip.annotations.NotThreadSafe;
 import net.minidev.json.parser.JSONParser;
 import net.minidev.json.parser.ParseException;

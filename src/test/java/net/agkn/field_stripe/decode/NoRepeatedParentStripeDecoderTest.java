@@ -53,6 +53,7 @@ public class NoRepeatedParentStripeDecoderTest {
     @Test
     public void flatSchemaTest() throws Exception {
         final String protobufText =
+            "package package_name;\n"/*required by Protostuff*/ +
             "message Message {\n" + 
             "    optional double   double_field = 1;\n" +
             "    required float    float_field = 2;\n" +
@@ -111,6 +112,7 @@ public class NoRepeatedParentStripeDecoderTest {
     @Test
     public void oneLevelNestedSchemaTest() throws Exception {
         final String protobufText =
+            "package package_name;\n"/*required by Protostuff*/ +
             "message Message {\n" + 
             "    optional double   double_field = 1;\n" +
             "    repeated int64    int64_field = 2;\n" +

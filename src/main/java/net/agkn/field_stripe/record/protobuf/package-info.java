@@ -17,10 +17,10 @@ package net.agkn.field_stripe.record.protobuf;
  */
 
 /**
- * An implementation of the record interfaces using the AK Protobuf parser.
- * The primary entry point is {@link ProtobufFieldTypeFactory#createFieldType(java.util.List, String)}
+ * An implementation of the record interfaces using the <a href="http://code.google.com/p/protostuff/">protostuff</a>
+ * parser. The primary entry point is {@link ProtobufFieldTypeFactory#createFieldType(java.util.List, String)}
  * which creates a {@link IFieldType field type} from a collection of 
- * {@link net.agkn.protobuf.parser.ProtobufDefinition Protobuf definitions}.<p/>
+ * {@link com.dyuproject.protostuff.parser.Proto Protobuf definitions}.<p/>
  * 
  * At this time this implementation cannot be mixed with other implementations.
  * Specifically the {@link Path path} {@link ProtobufCompositeType#resolve(Path) resolution}

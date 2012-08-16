@@ -22,7 +22,7 @@ import static org.testng.Assert.assertNotNull;
 
 import java.io.StringReader;
 
-import net.agkn.common.exception.OperationFailedException;
+import net.agkn.field_stripe.exception.OperationFailedException;
 import net.agkn.field_stripe.record.ICompositeType;
 import net.agkn.field_stripe.record.reader.IRecordReader;
 import net.agkn.field_stripe.record.reader.SmartJsonArrayRecordReader;
@@ -47,6 +47,7 @@ public class RepeatedParentStripeEncoderTest {
     @Test
     public void oneLevelNestedSchemaTest() throws Exception {
         final String protobufText =
+            "package package_name;\n"/*required by Protostuff*/ +
             "message Message {\n" + 
             "    optional double   double_field = 1;\n" +
             "    repeated int64    int64_field = 2;\n" +
@@ -178,6 +179,7 @@ public class RepeatedParentStripeEncoderTest {
         // NOTE:  this matches the "Employee" example in the "Efficient Field-
         //        Striped, Nested Disk-backed Record Storage" document
         final String protobufText =
+            "package package_name;\n"/*required by Protostuff*/ +
             "message Employee {\n" + 
             "    required int64    RecId = 1;\n" +
             "    required int64    EmpId = 2;\n" +
@@ -400,6 +402,7 @@ public class RepeatedParentStripeEncoderTest {
         // NOTE:  this matches the "Employee" example in the "Efficient Field-
         //        Striped, Nested Disk-backed Record Storage" document
         final String protobufText =
+            "package package_name;\n"/*required by Protostuff*/ +
             "message Employee {\n" + 
             "    required int64    RecId = 1;\n" +
             "    required int64    EmpId = 2;\n" +
@@ -521,6 +524,7 @@ public class RepeatedParentStripeEncoderTest {
     @Test
     public void nullInRepeatedValueTest() throws Exception {
         final String protobufText =
+            "package package_name;\n"/*required by Protostuff*/ +
             "message Message {\n" + 
             "    optional double   double_field = 1;\n" +
             "    repeated int64    int64_field = 2;\n" +

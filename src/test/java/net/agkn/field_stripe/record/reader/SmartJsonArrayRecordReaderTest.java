@@ -22,7 +22,7 @@ import static org.testng.Assert.assertTrue;
 
 import java.io.StringReader;
 
-import net.agkn.common.exception.InvalidDataException;
+import net.agkn.field_stripe.exception.InvalidDataException;
 import net.agkn.field_stripe.record.writer.JsonArrayRecordWriterTest;
 
 import org.apache.commons.lang.mutable.MutableBoolean;

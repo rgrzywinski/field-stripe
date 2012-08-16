@@ -25,10 +25,9 @@ import net.agkn.field_stripe.record.ICompositeType;
 import net.agkn.field_stripe.record.IField;
 import net.agkn.field_stripe.record.IFieldType;
 import net.agkn.field_stripe.record.Path;
-import net.agkn.protobuf.parser.MessageDefinition;
 
 /**
- * A {@link ICompositeType} built from a Protobuf {@link MessageDefinition}.
+ * A {@link ICompositeType} built from a Protobuf {@link com.dyuproject.protostuff.parser.Message}.
  * All fields are not valid until {@link #resolve(Path)} has been called on this
  * object.
  *

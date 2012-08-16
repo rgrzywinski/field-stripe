@@ -16,7 +16,6 @@ package net.agkn.field_stripe.encode;
  * limitations under the License. 
  */
 
-import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
@@ -26,10 +25,9 @@ import java.util.List;
 import net.agkn.field_stripe.record.ICompositeType;
 import net.agkn.field_stripe.record.IFieldType;
 import net.agkn.field_stripe.record.protobuf.ProtobufFieldTypeFactory;
-import net.agkn.protobuf.parser.ProtobufDefinition;
-import net.agkn.protobuf.parser.ProtobufParser;
-import net.agkn.test.common.TestUtils;
-import net.agkn.test.common.mock.MockLog4jAppender;
+import net.agkn.field_stripe.record.protobuf.StringProtoLoader;
+
+import com.dyuproject.protostuff.parser.Proto;
 
 /**
  * A convenience class for building a {@link ICompositeType} from some IDL
@@ -38,19 +36,6 @@ import net.agkn.test.common.mock.MockLog4jAppender;
  * @author rgrzywinski
  */
 public class SchemaBuilder {
-    public final MockLog4jAppender logAppender/*everything 'net.agkn'*/;
-    public final MockLog4jAppender invaliDefinitionAppender;
-
-    // ========================================================================
-    /**
-     * Create the appendedrs.
-     */
-    public SchemaBuilder() {
-        logAppender = TestUtils.addAppender("net.agkn");
-        invaliDefinitionAppender = TestUtils.addAppender("invalid-definition");
-    }
-
-    // ========================================================================
     /**
      * Creates (and asserts that there were no errors while creating) a 
      * ({@link ICompositeType composite-type}) {@link IFieldType schema} from 
@@ -58,11 +43,8 @@ public class SchemaBuilder {
      */
     public ICompositeType createSchema(final String protobufText, final String messageName) {
         try {
-            final ProtobufParser parser = new ProtobufParser();
-            final ProtobufDefinition protobufDefinition = parser.parse("Message.proto"/*arbitrary*/, protobufText);
-            final List<ProtobufDefinition> protobufDefinitions = Collections.singletonList(protobufDefinition);
-            assertEquals(logAppender.getEvents().size(), 0, "Number of logged errors");
-            assertEquals(invaliDefinitionAppender.getEvents().size(), 0, "Number of logged invalid definition errors");
+            final Proto protobufDefinition = StringProtoLoader.parseProto(protobufText);
+            final List<Proto> protobufDefinitions = Collections.singletonList(protobufDefinition);
 
             final ProtobufFieldTypeFactory fieldTypeFactory = new ProtobufFieldTypeFactory();
             final IFieldType fieldType = fieldTypeFactory.createFieldType(protobufDefinitions, messageName);

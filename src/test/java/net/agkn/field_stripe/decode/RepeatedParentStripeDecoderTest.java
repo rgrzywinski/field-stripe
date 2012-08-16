@@ -54,6 +54,7 @@ public class RepeatedParentStripeDecoderTest {
     @Test
     public void oneLevelNestedSchemaTest() throws Exception {
         final String protobufText =
+            "package package_name;\n"/*required by Protostuff*/ +
             "message Message {\n" + 
             "    optional double   double_field = 1;\n" +
             "    repeated int64    int64_field = 2;\n" +
@@ -120,6 +121,7 @@ public class RepeatedParentStripeDecoderTest {
         // NOTE:  this matches the "Employee" example in the "Efficient Field-
         //        Striped, Nested Disk-backed Record Storage" document
         final String protobufText =
+            "package package_name;\n"/*required by Protostuff*/ +
             "message Employee {\n" + 
             "    required int64    RecId = 1;\n" +
             "    required int64    EmpId = 2;\n" +

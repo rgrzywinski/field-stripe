@@ -209,6 +209,7 @@ public class BinaryVLenFieldStripeWriterTest {
     @Test
     public void nestedStrutureHeaderTest() throws Exception {
         final String protobufText =
+            "package package_name;\n"/*required by Protostuff*/ +
             "message Message {\n" + 
             "    required int64    int64_field = 1;\n" +
             "    message NestedMessage {\n" +
@@ -432,6 +433,7 @@ public class BinaryVLenFieldStripeWriterTest {
         // NOTE:  this matches the "Employee" example in the "Efficient Field-
         //        Striped, Nested Disk-backed Record Storage" document
         final String protobufText =
+            "package package_name;\n"/*required by Protostuff*/ +
             "message Employee {\n" + 
             "    required int64    RecId = 1;\n" +
             "    required int64    EmpId = 2;\n" +
